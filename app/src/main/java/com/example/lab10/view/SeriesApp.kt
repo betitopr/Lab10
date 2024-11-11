@@ -1,13 +1,23 @@
 package com.example.lab10.view
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -20,10 +30,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -36,35 +49,19 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 @Composable
-fun SeriesApp() {
-    val urlBase = "http://10.0.2.2:8000/" // o tu IP si usarás un dispositivo externo
-    val retrofit = Retrofit.Builder().baseUrl(urlBase)
-        .addConverterFactory(GsonConverterFactory.create()).build()
-    val servicio = retrofit.create(SerieApiService::class.java)
-    val navController = rememberNavController()
-
-    Scaffold(
-        modifier = Modifier.padding(top=40.dp),
-        topBar =    { BarraSuperior() },
-        bottomBar = { BarraInferior(navController) },
-        floatingActionButton = { BotonFAB(navController, servicio) },
-        content =   { paddingValues -> Contenido(paddingValues, navController, servicio) }
-    )
-}
-
-@Composable
 fun BotonFAB(navController: NavHostController, servicio: SerieApiService) {
     val cbeState by navController.currentBackStackEntryAsState()
     val rutaActual = cbeState?.destination?.route
     if (rutaActual == "series") {
         FloatingActionButton(
-            containerColor = Color.Magenta,
+            containerColor = Color.Red,
             contentColor = Color.White,
             onClick = { navController.navigate("serieNuevo") }
         ) {
             Icon(
                 imageVector = Icons.Filled.Add,
-                contentDescription = "Add"
+                contentDescription = "Add",
+                modifier = Modifier.size(28.dp)
             )
         }
     }
@@ -78,11 +75,12 @@ fun BarraSuperior() {
             Text(
                 text = "SERIES APP",
                 color = Color.White,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
             )
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primary
+            containerColor = Color(0xFF141414) // Color oscuro de Netflix
         )
     )
 }
@@ -90,53 +88,20 @@ fun BarraSuperior() {
 @Composable
 fun BarraInferior(navController: NavHostController) {
     NavigationBar(
-        containerColor = Color.LightGray
+        containerColor = Color(0xFF141414)
     ) {
         NavigationBarItem(
-            icon = { Icon(Icons.Outlined.Home, contentDescription = "Inicio") },
-            label = { Text("Inicio") },
+            icon = { Icon(Icons.Outlined.Home, contentDescription = "Inicio", tint = Color.White) },
+            label = { Text("Inicio", color = Color.White) },
             selected = navController.currentDestination?.route == "inicio",
             onClick = { navController.navigate("inicio") }
         )
         NavigationBarItem(
-            icon = { Icon(Icons.Outlined.Favorite, contentDescription = "Series") },
-            label = { Text("Series") },
+            icon = { Icon(Icons.Outlined.Favorite, contentDescription = "Series", tint = Color.White) },
+            label = { Text("Series", color = Color.White) },
             selected = navController.currentDestination?.route == "series",
             onClick = { navController.navigate("series") }
         )
     }
 }
 
-@Composable
-fun Contenido(
-    pv: PaddingValues,
-    navController: NavHostController,
-    servicio: SerieApiService
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(pv)
-    ) {
-        NavHost(
-            navController = navController,
-            startDestination = "inicio" // Ruta de inicio
-        ) {
-            composable("inicio") { ScreenInicio() }
-            composable("series") { ContenidoSeriesListado(navController, servicio) }
-            composable("serieNuevo") {
-                ContenidoSerieEditar(navController, servicio, 0 )
-            }
-            composable("serieVer/{id}", arguments = listOf(
-                navArgument("id") { type = NavType.IntType} )
-            ) {
-                ContenidoSerieEditar(navController, servicio, it.arguments!!.getInt("id"))
-            }
-            composable("serieDel/{id}", arguments = listOf(
-                navArgument("id") { type = NavType.IntType} )
-            ) {
-                ContenidoSerieEliminar(navController, servicio, it.arguments!!.getInt("id"))
-            }
-        }
-    }
-}

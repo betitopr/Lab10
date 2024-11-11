@@ -8,7 +8,7 @@ import retrofit2.http.Headers
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
-
+//métodos para comunicarnos con la API:
 interface SerieApiService {
     @GET("serie")
     suspend fun selectSeries():ArrayList<SerieModel>
