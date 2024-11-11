@@ -12,6 +12,9 @@ data class SerieModel(
     @SerializedName("rating")
     var rating:Int,
     @SerializedName("category")
-    var category:String
+    var category:String,
+    @SerializedName("image_url")
+    var imageUrl: String = ""  // URL de la imagen
+
 
 )
