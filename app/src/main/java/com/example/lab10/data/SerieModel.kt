@@ -16,5 +16,4 @@ data class SerieModel(
     @SerializedName("image_url")
     var imageUrl: String = ""  // URL de la imagen
 
-
 )
