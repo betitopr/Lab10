@@ -30,8 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import com.tecsup.lab10.data.SerieApiService
-import com.tecsup.lab10.data.SerieModel
+import com.example.lab10.data.SerieApiService
+import com.example.lab10.data.SerieModel
 import kotlinx.coroutines.delay
 
 @Composable
