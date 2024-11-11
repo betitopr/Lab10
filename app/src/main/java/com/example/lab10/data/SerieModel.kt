@@ -13,4 +13,5 @@ data class SerieModel(
     var rating:Int,
     @SerializedName("category")
     var category:String
+
 )
