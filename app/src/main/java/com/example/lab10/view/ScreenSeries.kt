@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -21,6 +22,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
@@ -32,12 +35,17 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -59,10 +67,13 @@ import com.example.lab10.data.SerieApiService
 import com.example.lab10.data.SerieModel
 import kotlinx.coroutines.delay
 
-@Composable
 @OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun ContenidoSeriesListado(navController: NavHostController, servicio: SerieApiService) {
     var listaSeries: SnapshotStateList<SerieModel> = remember { mutableStateListOf() }
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    var showSearch by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val listado = servicio.selectSeries()
@@ -74,18 +85,91 @@ fun ContenidoSeriesListado(navController: NavHostController, servicio: SerieApiS
             .fillMaxSize()
             .background(Color(0xFF1A1A1A))
     ) {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(listaSeries) { serie ->
-                SerieCard(
-                    serie = serie,
-                    onEditClick = { navController.navigate("serieVer/${serie.id}") },
-                    onDeleteClick = { navController.navigate("serieDel/${serie.id}") }
-                )
+        Column {
+            // Barra de búsqueda y filtros
+            TopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF2A2A2A)
+                ),
+                title = {
+                    if (showSearch) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = { Text("Buscar series...", color = Color.Gray) },
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color.Red,
+                                unfocusedBorderColor = Color.Gray,
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        Text("Series", color = Color.White)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showSearch = !showSearch }) {
+                        Icon(
+                            imageVector = if (showSearch) Icons.Default.Close else Icons.Default.Search,
+                            contentDescription = "Buscar",
+                            tint = Color.White
+                        )
+                    }
+                }
+            )
+
+            // Filtro de categorías
+            LazyRow(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                item {
+                    FilterChip(
+                        selected = selectedCategory == null,
+                        onClick = { selectedCategory = null },
+                        label = { Text("Todas") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color.Red,
+                            containerColor = Color(0xFF2A2A2A)
+                        )
+                    )
+                }
+                items(categorias) { categoria ->
+                    FilterChip(
+                        selected = selectedCategory == categoria,
+                        onClick = { selectedCategory = categoria },
+                        label = { Text(categoria) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Color.Red,
+                            containerColor = Color(0xFF2A2A2A)
+                        )
+                    )
+                }
+            }
+
+            // Grid de series filtradas
+            val filteredSeries = listaSeries.filter { serie ->
+                (selectedCategory == null || serie.category == selectedCategory) &&
+                        (searchQuery.isEmpty() || serie.name.contains(searchQuery, ignoreCase = true))
+            }
+
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(filteredSeries) { serie ->
+                    SerieCard(
+                        serie = serie,
+                        onEditClick = { navController.navigate("serieVer/${serie.id}") },
+                        onDeleteClick = { navController.navigate("serieDel/${serie.id}") }
+                    )
+                }
             }
         }
     }
